@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Fumaça - ESP8266</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            text-align: center;
+            padding: 50px;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+            display: inline-block;
+        }
+        h1 { color: #333; }
+        .valor {
+            font-size: 48px;
+            font-weight: bold;
+            color: #d9534f;
+            margin: 20px 0;
+        }
+        .status {
+            font-size: 18px;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            background-color: #5cb85c;
+        }
+        .alerta {
+            background-color: #d9534f !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Monitoramento de Fumaça</h1>
+        <p>Nível atual capturado pelo ESP8266:</p>
+        <div id="fumacaValor" class="valor">Carregando...</div>
+        <div id="statusTexto" class="status">A aguardar dados...</div>
+    </div>
+
+    <!-- Importação do Firebase versão compatível com web -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Configuração do seu Firebase (mesma URL do seu projeto)
+        const firebaseConfig = {
+            databaseURL: "https://fereana-60625-default-rtdb.firebaseio.com/"
+        };
+
+        // Inicializa o Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Referência para o caminho "/Dados/Fumaca" no banco de dados
+        const dbRef = firebase.database().ref('Dados/Fumaca');
+
+        const elementoValor = document.getElementById('fumacaValor');
+        const elementoStatus = document.getElementById('statusTexto');
+
+        // Fica escutando alterações no valor da fumaça em tempo real
+        dbRef.on('value', (snapshot) => {
+            const valor = snapshot.val();
+            
+            if (valor !== null) {
+                elementoValor.innerText = valor;
+
+                // Lógica de alerta visual no site baseada no limite de 40
+                if (valor > 40) {
+                    elementoStatus.innerText = "ATENÇÃO: Nível alto de fumaça detetado!";
+                    elementoStatus.classList.add('alerta');
+                } else {
+                    elementoStatus.innerText = "Ambiente Seguro (Normal)";
+                    elementoStatus.classList.remove('alerta');
+                }
+            } else {
+                elementoValor.innerText = "Sem dados";
+            }
+        });
+    </script>
+
+</body>
+</html>
